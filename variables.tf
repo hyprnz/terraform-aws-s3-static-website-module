@@ -1,53 +1,23 @@
 variable "site_name" {
+  type        = string
   description = "The name of the static website or js bundle to be hosted by the S3 bucket. This will be the bucket name prefix."
 }
 
 variable "namespace" {
+  type        = string
   description = "A namespace that is appended to the `site_name` variable. This minimises S3 bucket naming collisions."
 }
 
 variable "index_document_default" {
+  type        = string
   description = "The default html file. Defaults to `index.html`."
   default     = "index.html"
 }
 
 variable "error_document_default" {
+  type        = string
   description = "The default error html file. Defaults to `error.html`."
   default     = "error.html"
-}
-
-variable "redirect_url" {
-  description = "A hostname to redirect all website requests for this bucket to. Hostname can optionally be prefixed with a protocol (`http://` or `https://`) to use when redirecting requests. The default is the protocol that is used in the original request. If set will override the `index_document_default` variable"
-  type        = string
-  default     = ""
-}
-
-variable "cors_allowed_origins" {
-  description = "A list of allowed CORS origins."
-  type        = list(string)
-}
-
-variable "cors_allowed_headers" {
-  description = "Specifies which headers are allowed."
-  type        = list(string)
-}
-
-variable "cors_allowed_methods" {
-  description = "Specifies which methods are allowed. Can be GET, PUT, POST, DELETE or HEAD. Defaults to `GET`, `PUT`, `POST`."
-  type        = list(string)
-  default     = ["GET", "PUT", "POST"]
-}
-
-variable "cors_expose_headers" {
-  description = "Specifies expose header in the response. Defaults to `ETag`."
-  type        = list(string)
-  default     = ["ETag"]
-}
-
-variable "cors_max_age_seconds" {
-  description = "Specifies time in seconds that browser can cache the response for a preflight request. Defaults to 1 hour."
-  type        = number
-  default     = 3600
 }
 
 variable "site_config_values" {
@@ -56,11 +26,13 @@ variable "site_config_values" {
   default     = {}
 }
 
-variable "url" {
-  description = "The custom URL to access the site. Must match the certificate name to provide a valid TLS connection."
+variable "domain_name" {
+  type        = string
+  description = "Add a custom domain name to the CloudFront distribution. Must match the certificate name to provide a valid TLS connection."
+  default     = null
 }
 
-variable cloudfront_custom_errors {
+variable "cloudfront_custom_errors" {
   description = "A map of custom error settings for the CloudFront Distribution"
   type = list(object({
     error_caching_min_ttl = number
@@ -122,18 +94,26 @@ variable "enable_cdn_compression" {
   default     = true
 }
 
+variable "create_certificate" {
+  type        = bool
+  description = "Determine if a certificate is created for the custom domain name, only work when `domain_name` is provided. Default is true."
+  default     = true
+}
+
 variable "certificate_arn" {
+  type        = string
   description = "The arn of the certificate to be used for TLS connections. The certificate must be in the same account as the cloudfront resource."
+  default     = null
 }
 
 variable "create_custom_route53_record" {
-  description = "Determines if a route53 alias record should be created that matches the `url` variable. Default is false."
+  description = "Determines if a route53 alias record should be created that matches the `domain_name` variable. Default is false."
   type        = bool
   default     = false
 }
 
 variable "zone_id" {
-  description = "The zone id of the hosted zone to create the alias record in. Used only when `create_custom_route53_record` is set to `true`. "
+  description = "The zone id of the hosted zone to create the alias record in. Used only when `create_custom_route53_record` is set to `true`."
   default     = ""
 }
 

@@ -1,25 +1,21 @@
-resource "aws_cloudfront_distribution" "cdn" {
-  origin {
-    origin_id   = aws_s3_bucket.static_website.id
-    domain_name = aws_s3_bucket.static_website.website_endpoint
+locals {
+  acm_certificate_arn = local.create_certificate ? aws_acm_certificate.this[0].arn : var.certificate_arn
+}
 
-    custom_origin_config {
-      http_port              = "80"
-      https_port             = "443"
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
-    }
+resource "aws_cloudfront_distribution" "this" {
+  origin {
+    origin_id                = aws_s3_bucket.origin.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+    domain_name              = aws_s3_bucket.origin.bucket_domain_name
   }
 
+  aliases     = local.enable_custom_domain_name ? [var.domain_name] : null
+  enabled     = true
+  comment     = var.comment
+  price_class = var.price_class
 
-
-  aliases             = [var.url]
-  wait_for_deployment = var.wait_for_deployment
-
-  enabled             = true
-  comment             = var.comment
   default_root_object = var.index_document_default
-
+  wait_for_deployment = var.wait_for_deployment
 
   dynamic "custom_error_response" {
     for_each = var.cloudfront_custom_errors
@@ -34,7 +30,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_cache_behavior {
     allowed_methods  = var.cloudfront_allowed_methods
     cached_methods   = var.cloudfront_cached_methods
-    target_origin_id = aws_s3_bucket.static_website.id
+    target_origin_id = aws_s3_bucket.origin.id
     compress         = var.enable_cdn_compression
 
     forwarded_values {
@@ -60,7 +56,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     min_ttl                = 0
     path_pattern           = var.index_document_default
     smooth_streaming       = false
-    target_origin_id       = aws_s3_bucket.static_website.id
+    target_origin_id       = aws_s3_bucket.origin.id
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
@@ -81,7 +77,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     min_ttl                = 0
     path_pattern           = "config.json"
     smooth_streaming       = false
-    target_origin_id       = aws_s3_bucket.static_website.id
+    target_origin_id       = aws_s3_bucket.origin.id
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
@@ -93,9 +89,6 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-
-  price_class = var.price_class
-
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -105,15 +98,26 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   viewer_certificate {
     # Certificates for cloudfront _must_ be created in us-east-1
-    acm_certificate_arn      = var.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1"
+    cloudfront_default_certificate = !local.enable_custom_domain_name
+    acm_certificate_arn            = local.enable_custom_domain_name ? local.acm_certificate_arn : null
+    ssl_support_method             = local.enable_custom_domain_name ? "sni-only" : null
+    minimum_protocol_version       = local.enable_custom_domain_name ? "TLSv1.2_2021" : null
   }
 
   logging_config {
-    bucket = aws_s3_bucket.static_website_log_bucket.bucket_domain_name
+    bucket = aws_s3_bucket.log.bucket_domain_name
     prefix = "cloudfront/"
   }
 
-  tags = merge({ "Name" = format("%s-cdn", var.site_name), "Site Name" = var.site_name }, var.cloudfront_tags, var.module_tags)
+  tags = merge(local.tags, var.cloudfront_tags)
+
+  depends_on = [aws_s3_bucket_acl.log]
+}
+
+resource "aws_cloudfront_origin_access_control" "this" {
+  name                              = "s3"
+  description                       = "S3 Bucket accsss policy"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
