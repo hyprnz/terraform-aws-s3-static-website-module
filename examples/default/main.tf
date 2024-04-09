@@ -8,8 +8,11 @@ module "static_website_example" {
   site_name = "frontend"
   namespace = var.namespace
 
-  url             = var.url
-  certificate_arn = var.certificate_arn
+  domain_name                  = var.domain_name
+  certificate_arn              = var.certificate_arn
+  create_certificate           = var.create_certificate
+  zone_id                      = var.zone_id
+  create_custom_route53_record = var.create_custom_route53_record
 
   site_config_values = {
     "auth_url"    = "www.google.com"
@@ -25,14 +28,9 @@ module "static_website_example" {
       response_page_path    = "/index.html"
   }]
 
-  cors_allowed_origins = ["*"]
-  cors_allowed_headers = [""]
-
   module_tags     = { "Environment" = "test", "env" = "test" }
   s3_tags         = { "s3-example" = "true" }
   cloudfront_tags = { "cloudfront-example" = "true" }
-
-  wait_for_deployment = false
 
   comment = "Example static website cloudfront distribution"
 }
@@ -41,9 +39,10 @@ provider "aws" {
   region = var.aws_region
 }
 
-variable "aws_region" {
-  default = "ap-southeast-2"
-}
-variable "url" {}
-variable "certificate_arn" {}
+variable "aws_region" { default = "us-west-2" }
+variable "domain_name" { default = null }
+variable "zone_id" { default = "" }
+variable "create_custom_route53_record" { default = false }
+variable "certificate_arn" { default = "" }
 variable "namespace" {}
+variable "create_certificate" { default = true }
