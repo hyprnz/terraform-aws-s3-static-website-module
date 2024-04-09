@@ -44,53 +44,87 @@ This repo supports version 0.11 and 0.12 of Terraform. The implementation patter
 All contributions are accepted, details on how to contribute can be found in [contrib.md](contrib.md).
 
 ---
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | >= 0.12 |
+| aws | ~> 5.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | ~> 2.19 |
+| aws | ~> 5.0 |
+| aws.global | ~> 5.0 |
+
+## Modules
+
+No modules.
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:-----:|
-| certificate\_arn | The arn of the certificate to be used for TLS connections. The certificate must be in the same account as the cloudfront resource. | `any` | n/a | yes |
-| cors\_allowed\_headers | Specifies which headers are allowed. | `list(string)` | n/a | yes |
-| cors\_allowed\_origins | A list of allowed CORS origins. | `list(string)` | n/a | yes |
-| namespace | A namespace that is appended to the `site_name` variable. This minimises S3 bucket naming collisions. | `any` | n/a | yes |
-| site\_name | The name of the static website or js bundle to be hosted by the S3 bucket. This will be the bucket name prefix. | `any` | n/a | yes |
-| url | The custom URL to access the site. Must match the certificate name to provide a valid TLS connection. | `any` | n/a | yes |
-| cloudfront\_allowed\_methods | Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin. | `list(string)` | <pre>[<br>  "GET",<br>  "HEAD",<br>  "OPTIONS"<br>]<br></pre> | no |
-| cloudfront\_cached\_methods | Controls whether CloudFront caches the response to requests using the specified HTTP methods. | `list(string)` | <pre>[<br>  "GET",<br>  "HEAD"<br>]<br></pre> | no |
-| cloudfront\_custom\_errors | A map of custom error settings for the CloudFront Distribution | <pre>list(object({<br>    error_caching_min_ttl = number<br>    error_code            = number<br>    response_code         = number<br>    response_page_path    = string<br>  }))<br></pre> | `[]` | no |
-| cloudfront\_tags | Additional tags to be added to all cloudfront resources. | `map(any)` | `{}` | no |
+|------|-------------|------|---------|:--------:|
+| namespace | A namespace that is appended to the `site_name` variable. This minimises S3 bucket naming collisions. | `string` | n/a | yes |
+| site_name | The name of the static website or js bundle to be hosted by the S3 bucket. This will be the bucket name prefix. | `string` | n/a | yes |
+| certificate_arn | The arn of the certificate to be used for TLS connections. The certificate must be in the same account as the cloudfront resource. | `string` | `null` | no |
+| cloudfront_allowed_methods | Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin. | `list(string)` | <pre>[<br>  "GET",<br>  "HEAD",<br>  "OPTIONS"<br>]</pre> | no |
+| cloudfront_cached_methods | Controls whether CloudFront caches the response to requests using the specified HTTP methods. | `list(string)` | <pre>[<br>  "GET",<br>  "HEAD"<br>]</pre> | no |
+| cloudfront_custom_errors | A map of custom error settings for the CloudFront Distribution | <pre>list(object({<br>    error_caching_min_ttl = number<br>    error_code            = number<br>    response_code         = number<br>    response_page_path    = string<br>  }))</pre> | `[]` | no |
+| cloudfront_tags | Additional tags to be added to all cloudfront resources. | `map(any)` | `{}` | no |
 | comment | A comment for the Cloudfront distribution resource | `string` | `""` | no |
-| cors\_allowed\_methods | Specifies which methods are allowed. Can be GET, PUT, POST, DELETE or HEAD. Defaults to `GET`, `PUT`, `POST`. | `list(string)` | <pre>[<br>  "GET",<br>  "PUT",<br>  "POST"<br>]<br></pre> | no |
-| cors\_expose\_headers | Specifies expose header in the response. Defaults to `ETag`. | `list(string)` | <pre>[<br>  "ETag"<br>]<br></pre> | no |
-| cors\_max\_age\_seconds | Specifies time in seconds that browser can cache the response for a preflight request. Defaults to 1 hour. | `number` | `3600` | no |
-| create\_custom\_route53\_record | Determines if a route53 alias record should be created that matches the `url` variable. Default is false. | `bool` | `false` | no |
-| default\_ttl | The default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an Cache-Control max-age or Expires header. Defaults to 1 hour. | `number` | `3600` | no |
-| enable\_cdn\_compression | Select whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header. CloudFront compresses files of certain types for both Amazon S3 and custom origins. Default is `true`. | `bool` | `true` | no |
-| error\_document\_default | The default error html file. Defaults to `error.html`. | `string` | `"error.html"` | no |
-| index\_document\_default | The default html file. Defaults to `index.html`. | `string` | `"index.html"` | no |
-| max\_ttl | The maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of Cache-Control max-age, Cache-Control s-maxage, and Expires headers. Defaults to 7 days. | `number` | `604800` | no |
-| min\_ttl | The minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds. | `number` | `0` | no |
-| module\_tags | Additional tags that are added to all resources in this module. | `map(any)` | `{}` | no |
-| price\_class | The price class for this distribution. One of `PriceClass_All`, `PriceClass_200`, `PriceClass_100`. | `string` | `"PriceClass_All"` | no |
-| redirect\_url | A hostname to redirect all website requests for this bucket to. Hostname can optionally be prefixed with a protocol (`http://` or `https://`) to use when redirecting requests. The default is the protocol that is used in the original request. If set will override the `index_document_default` variable | `string` | `""` | no |
-| s3\_tags | Additional tags to be added to all s3 resources. | `map(any)` | `{}` | no |
-| site\_config\_values | A map of js bundle configuration values required for a specific environment. | `map(any)` | `{}` | no |
-| wait\_for\_deployment | If enabled, the resource will wait for the distribution status to change from `InProgress` to `Deployed`. Setting this to `false` will skip the process. Default: `true`. | `bool` | `true` | no |
-| zone\_id | The zone id of the hosted zone to create the alias record in. Used only when `create_custom_route53_record` is set to `true`. | `string` | `""` | no |
+| create_certificate | Determine if a certificate is created for the custom domain name, only work when `domain_name` is provided. Default is true. | `bool` | `true` | no |
+| create_custom_route53_record | Determines if a route53 alias record should be created that matches the `domain_name` variable. Default is false. | `bool` | `false` | no |
+| default_ttl | The default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an Cache-Control max-age or Expires header. Defaults to 1 hour. | `number` | `3600` | no |
+| domain_name | Add a custom domain name to the CloudFront distribution. Must match the certificate name to provide a valid TLS connection. | `string` | `null` | no |
+| enable_cdn_compression | Select whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header. CloudFront compresses files of certain types for both Amazon S3 and custom origins. Default is `true`. | `bool` | `true` | no |
+| error_document_default | The default error html file. Defaults to `error.html`. | `string` | `"error.html"` | no |
+| index_document_default | The default html file. Defaults to `index.html`. | `string` | `"index.html"` | no |
+| max_ttl | The maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of Cache-Control max-age, Cache-Control s-maxage, and Expires headers. Defaults to 7 days. | `number` | `604800` | no |
+| min_ttl | The minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds. | `number` | `0` | no |
+| module_tags | Additional tags that are added to all resources in this module. | `map(any)` | `{}` | no |
+| price_class | The price class for this distribution. One of `PriceClass_All`, `PriceClass_200`, `PriceClass_100`. | `string` | `"PriceClass_All"` | no |
+| s3_tags | Additional tags to be added to all s3 resources. | `map(any)` | `{}` | no |
+| site_config_values | A map of js bundle configuration values required for a specific environment. | `map(any)` | `{}` | no |
+| wait_for_deployment | If enabled, the resource will wait for the distribution status to change from `InProgress` to `Deployed`. Setting this to `false` will skip the process. Default: `true`. | `bool` | `true` | no |
+| zone_id | The zone id of the hosted zone to create the alias record in. Used only when `create_custom_route53_record` is set to `true`. | `string` | `""` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| cloudfront\_hosted\_zone | The hosted zone id of the Cloudfront Distribution |
-| cloudfront\_url | The URL for the Cloudfront Distribution - used to set the alias for the custom domain. |
-| s3\_bucket\_domain\_name | The regional domain of the s3 web site bucket. |
-| s3\_bucket\_hosted\_id | The hosted\_id s3 web site bucket. |
-| s3\_bucket\_website\_endpoint | The endpoint of the s3 web site bucket. |
+| cloudfront_hosted_zone | The hosted zone id of the Cloudfront Distribution |
+| cloudfront_url | The URL for the Cloudfront Distribution - used to set the alias for the custom domain. |
+| custom_domain_name | The custom domain name of the CloudFront distribution. |
+| s3_bucket_domain_name | The domain name of the s3 web site bucket. |
+| s3_bucket_regional_domain_name | The regional domain name of the s3 web site bucket. |
 
+<br/>
+
+---
+## License
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+See [LICENSE](LICENSE) for full details.
+
+```
+Copyright 2020 Hypr NZ
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+Copyright &copy; 2020 [Hypr NZ](https://www.hypr.nz/)
+<!-- END_TF_DOCS -->
