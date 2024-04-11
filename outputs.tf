@@ -3,6 +3,11 @@ output "custom_domain_name" {
   value       = var.domain_name
 }
 
+output "s3_bucket_name" {
+  description = "The name of the origin bucket."
+  value       = aws_s3_bucket.origin.id
+}
+
 output "s3_bucket_domain_name" {
   description = "The domain name of the s3 web site bucket."
   value       = aws_s3_bucket.origin.bucket_domain_name
