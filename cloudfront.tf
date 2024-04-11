@@ -6,7 +6,7 @@ resource "aws_cloudfront_distribution" "this" {
   origin {
     origin_id                = aws_s3_bucket.origin.id
     origin_access_control_id = aws_cloudfront_origin_access_control.this.id
-    domain_name              = aws_s3_bucket.origin.bucket_domain_name
+    domain_name              = aws_s3_bucket.origin.bucket_regional_domain_name
   }
 
   aliases     = local.enable_custom_domain_name ? [var.domain_name] : null
