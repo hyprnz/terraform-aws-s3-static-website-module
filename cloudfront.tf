@@ -115,7 +115,7 @@ resource "aws_cloudfront_distribution" "this" {
 }
 
 resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "s3"
+  name                              = aws_s3_bucket.origin.id
   description                       = "S3 Bucket accsss policy"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
